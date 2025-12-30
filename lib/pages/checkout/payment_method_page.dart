@@ -15,6 +15,8 @@ class PaymentMethodPage extends StatefulWidget {
 
 class _PaymentMethodPageState extends State<PaymentMethodPage> {
   static const Color kGreen = Color(0xFF1E6B4C);
+  List<Map<String, dynamic>> _paymentMethods = [];
+  bool _isLoadingMethods = true;
   String selectedMethod = 'Credit Card';
   bool _isProcessing = false;
   String _userName = 'John Doe';
@@ -26,6 +28,33 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
   void initState() {
     super.initState();
     _loadUserName();
+    _loadPaymentMethods();
+  }
+
+  Future<void> _loadPaymentMethods() async {
+    try {
+      // Get total amount from cart provider context later or just pass dummy amount for fee calc
+      // Ideally we access provider here but initState cannot access context normally for provider unless in build or post-frame
+      // We'll call it with default first
+      final methods = await OrderApi.getPaymentMethods();
+      if (mounted) {
+        setState(() {
+          _paymentMethods = methods;
+          _isLoadingMethods = false;
+          // Set first one as default if any
+          if (_paymentMethods.isNotEmpty && selectedMethod == 'Credit Card') {
+            selectedMethod = _paymentMethods[0]['paymentMethod'];
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingMethods = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Failed to load payment methods: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _loadUserName() async {
@@ -57,38 +86,35 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
             const SizedBox(height: 40),
 
             const Text(
-              "Payment Method",
+              "Select Payment Method",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 24),
 
-            _buildPaymentOption(
-              value: 'Credit Card',
-              title: 'Credit Card',
-              child: _buildCreditCardCarousel(),
-            ),
-
-            const Divider(height: 32),
-
-            _buildPaymentOption(
-              value: 'Bank Transfer',
-              title: 'Bank Transfer',
-              child: _buildBankTransferForm(),
-            ),
-
-            const Divider(height: 32),
-
-            _buildPaymentOption(
-              value: 'Virtual Account',
-              title: 'Virtual Account',
-              child: const Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: Text(
-                  "Use this method to pay via ATM or online banking.",
-                  style: TextStyle(color: Colors.black54),
-                ),
-              ),
-            ),
+            if (_isLoadingMethods)
+              const Center(child: CircularProgressIndicator())
+            else if (_paymentMethods.isEmpty)
+              const Text("No payment methods available.")
+            else
+               ..._paymentMethods.map((method) {
+                 return Column(
+                   children: [
+                     _buildPaymentOption(
+                       value: method['paymentMethod'], // Codes like 'SP', 'BC'
+                       title: method['paymentName'],
+                       imageUrl: method['paymentImage'],
+                       child: Padding(
+                         padding: const EdgeInsets.all(16.0),
+                         child: Text(
+                           "Pay using ${method['paymentName']}",
+                           style: const TextStyle(color: Colors.grey),
+                         ),
+                       ),
+                     ),
+                     const Divider(height: 16),
+                   ],
+                 );
+               }).toList(),
 
             const SizedBox(height: 32),
             _buildTotalSection(),
@@ -200,6 +226,7 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
   Widget _buildPaymentOption({
     required String value,
     required String title,
+    String? imageUrl,
     required Widget child,
   }) {
     return Theme(
@@ -217,12 +244,25 @@ class _PaymentMethodPageState extends State<PaymentMethodPage> {
           activeColor: kGreen,
           onChanged: (v) => setState(() => selectedMethod = v!),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
+        title: Row(
+          children: [
+            if (imageUrl != null && imageUrl.isNotEmpty)
+               Padding(
+                 padding: const EdgeInsets.only(right: 10),
+                 child: Image.network(imageUrl, width: 40, errorBuilder: (_,__,___) => const Icon(Icons.payment)),
+               ),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                  fontSize: 14
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
         children: [
           Padding(

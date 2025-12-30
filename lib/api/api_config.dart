@@ -21,7 +21,11 @@ class ApiConfig {
   static const String categories = '/api/categories';
   
   // Order endpoints
+  // Order endpoints
   static const String orders = '/api/orders';
+  
+  // Payment endpoints
+  static const String paymentMethods = '/api/payment/methods';
   
   // Helper methods
   static String productById(int id) => '/api/products/$id';

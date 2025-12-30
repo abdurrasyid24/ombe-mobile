@@ -195,4 +195,34 @@ class OrderApi {
       throw Exception('Error canceling order: $e');
     }
   }
+  // Get available payment methods
+  static Future<List<Map<String, dynamic>>> getPaymentMethods({double amount = 10000}) async {
+    try {
+      final token = await _storage.read(key: _tokenKey);
+      if (token == null) {
+        throw Exception('Not authenticated');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.paymentMethods}?amount=$amount'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        if (jsonResponse['success'] == true) {
+          return List<Map<String, dynamic>>.from(jsonResponse['data']);
+        } else {
+          throw Exception(jsonResponse['message'] ?? 'Failed to load payment methods');
+        }
+      } else {
+        throw Exception('Failed to load payment methods: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching payment methods: $e');
+    }
+  }
 }

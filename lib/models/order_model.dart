@@ -54,6 +54,9 @@ class Order {
   final double? discount;
   final double? finalTotal;
   final String? couponCode;
+  final String? paymentUrl;
+  final String? paymentReference;
+  final String? paymentCode;
 
   Order({
     required this.id,
@@ -70,6 +73,9 @@ class Order {
     this.discount,
     this.finalTotal,
     this.couponCode,
+    this.paymentUrl,
+    this.paymentReference,
+    this.paymentCode,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -101,6 +107,9 @@ class Order {
           ? double.parse(json['finalTotal'].toString())
           : null,
       couponCode: json['couponCode'],
+      paymentUrl: json['paymentUrl'],
+      paymentReference: json['paymentReference'],
+      paymentCode: json['paymentCode'],
     );
   }
 
@@ -120,6 +129,9 @@ class Order {
       'discount': discount,
       'finalTotal': finalTotal,
       'couponCode': couponCode,
+      'paymentUrl': paymentUrl,
+      'paymentReference': paymentReference,
+      'paymentCode': paymentCode,
     };
   }
 

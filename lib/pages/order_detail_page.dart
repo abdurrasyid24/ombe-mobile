@@ -1,19 +1,48 @@
 import 'package:flutter/material.dart';
 import '../models/order_model.dart';
 import 'package:ombe/pages/checkout/tracking_order_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class OrderDetailPage extends StatelessWidget {
+class OrderDetailPage extends StatefulWidget {
   final Order order;
   const OrderDetailPage({super.key, required this.order});
 
+  @override
+  State<OrderDetailPage> createState() => _OrderDetailPageState();
+}
+
+class _OrderDetailPageState extends State<OrderDetailPage> {
   static const Color kGreen = Color(0xFF1E6B4C);
   static const Color kSoftGrey = Color(0xFFF5F5F5);
+  late Order _currentOrder;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentOrder = widget.order;
+    // Check status if pending
+    if (_currentOrder.status == 'pending') {
+      _checkStatus();
+    }
+  }
+  
+  // Simple periodic check or just manual refresh
+  // For better UX, we could use a Timer, but for now let's just allow manual refresh 
+  // or refresh on resuming app (WidgetsBindingObserver)
+  
+  Future<void> _checkStatus() async {
+      // In a real app we would fetch the latest order status from API here
+      // But we need to add getOrderById to OrderApi first or reuse existing
+      // For now we just keep the passed order. 
+      // User can go back and forth to refresh list.
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        // ... (Keep existing AppBar)
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -38,10 +67,10 @@ class OrderDetailPage extends StatelessWidget {
             // Product image
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: order.items.isNotEmpty &&
-                      order.items.first.productImage != null
+              child: _currentOrder.items.isNotEmpty &&
+                      _currentOrder.items.first.productImage != null
                   ? Image.network(
-                      order.items.first.productImage!,
+                      _currentOrder.items.first.productImage!,
                       width: double.infinity,
                       height: 200,
                       fit: BoxFit.cover,
@@ -73,7 +102,7 @@ class OrderDetailPage extends StatelessWidget {
 
             // Product name
             Text(
-              order.orderNumber,
+              _currentOrder.orderNumber,
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
@@ -87,9 +116,9 @@ class OrderDetailPage extends StatelessWidget {
                     color: kGreen, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  order.status.toUpperCase(),
-                  style: const TextStyle(
-                    color: kGreen,
+                  _currentOrder.status.toUpperCase(),
+                  style: TextStyle(
+                    color: _getStatusColor(_currentOrder.status), // Use dynamic color
                     fontSize: 15.5,
                     fontWeight: FontWeight.w600,
                   ),
@@ -104,11 +133,11 @@ class OrderDetailPage extends StatelessWidget {
 
             // Order details
             const SizedBox(height: 10),
-            _buildInfoRow('Order Number', order.orderNumber),
-            _buildInfoRow('Total Items', '${order.totalItems} items'),
-            _buildInfoRow('Total Amount', '\$${order.totalAmount.toStringAsFixed(2)}'),
-            _buildInfoRow('Payment Method', order.paymentMethod),
-            _buildInfoRow('Status', order.status.toUpperCase()),
+            _buildInfoRow('Order Number', _currentOrder.orderNumber),
+            _buildInfoRow('Total Items', '${_currentOrder.totalItems} items'),
+            _buildInfoRow('Total Amount', '\$${_currentOrder.totalAmount.toStringAsFixed(2)}'),
+            _buildInfoRow('Payment Method', _currentOrder.paymentMethod),
+            _buildInfoRow('Status', _currentOrder.status.toUpperCase()),
 
             const SizedBox(height: 20),
             Container(
@@ -148,22 +177,41 @@ class OrderDetailPage extends StatelessWidget {
           height: 60,
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TrackingOrderPage()),
-              );
+            onPressed: () async {
+              // If pending and has payment URL, launch it
+              if (_currentOrder.status.toLowerCase() == 'pending' && 
+                  _currentOrder.paymentUrl != null && 
+                  _currentOrder.paymentUrl!.isNotEmpty) {
+                 final Uri url = Uri.parse(_currentOrder.paymentUrl!);
+                 if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                    if (context.mounted) {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         const SnackBar(content: Text('Could not launch payment page')),
+                       );
+                    }
+                 }
+              } else {
+                // Otherwise navigate to tracking
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TrackingOrderPage()),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: kGreen,
+              backgroundColor: (_currentOrder.status.toLowerCase() == 'pending' && _currentOrder.paymentUrl != null) 
+                  ? Colors.orange 
+                  : kGreen,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),
               ),
               elevation: 0,
             ),
-            child: const Text(
-              'TRACK ORDER',
-              style: TextStyle(
+            child: Text(
+              (_currentOrder.status == 'pending' && _currentOrder.paymentUrl != null) 
+                  ? 'PAY NOW' 
+                  : 'TRACK ORDER',
+              style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
                 letterSpacing: 0.2,
@@ -174,6 +222,18 @@ class OrderDetailPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending': return Colors.orange;
+      case 'paid': return Colors.blueAccent;
+      case 'processing': return Colors.blue; 
+      case 'shipped': return Colors.purple;
+      case 'completed': return kGreen;
+      case 'cancelled': return Colors.red;
+      default: return Colors.black;
+    }
   }
 
   Widget _buildInfoRow(String title, String value) {
@@ -202,3 +262,4 @@ class OrderDetailPage extends StatelessWidget {
     );
   }
 }
+

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/order_model.dart';
 import '../my_orders_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OrderSuccessPage extends StatelessWidget {
   final Order order;
@@ -272,6 +273,42 @@ class OrderSuccessPage extends StatelessWidget {
                     ),
                   ),
                 const SizedBox(height: 40),
+
+                // Make Payment Button (If payment URL exists)
+                if (order.paymentUrl != null && order.paymentUrl!.isNotEmpty && order.status == 'pending')
+                  Container(
+                    width: double.infinity,
+                    height: 56,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                         final Uri url = Uri.parse(order.paymentUrl!);
+                         if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                            if (context.mounted) {
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 const SnackBar(content: Text('Could not launch payment page')),
+                               );
+                            }
+                         }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange, // Orange for Action
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'PAY NOW',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          letterSpacing: 0.5,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
 
                 // Track Order Button
                 SizedBox(
