@@ -11,14 +11,38 @@ import 'package:ombe/pages/stores_location_page.dart';
 import 'package:ombe/pages/wishlist_page.dart';
 import 'package:ombe/pages/products_screen.dart';
 import 'package:ombe/services/auth_services.dart';
+import 'package:ombe/services/notification_service.dart';
 import 'package:ombe/pages/login_screen.dart';
 
-class HomeNavbar extends StatelessWidget {
+class HomeNavbar extends StatefulWidget {
   const HomeNavbar({super.key});
 
   static const kGreen = Color(0xFF1E6B4C);
   static const kGrey = Color(0xFF9FA5B0);
   static const kSoftGrey = Color(0xFFE9ECEF);
+
+  @override
+  State<HomeNavbar> createState() => _HomeNavbarState();
+}
+
+class _HomeNavbarState extends State<HomeNavbar> {
+  final NotificationService _notificationService = NotificationService();
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final count = await _notificationService.getUnreadCount();
+    if (mounted) {
+      setState(() {
+        _unreadCount = count;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,9 +108,8 @@ class HomeNavbar extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ProductsScreen(
-                              initialCategory: 'Beverages',
-                            ),
+                            builder: (context) =>
+                                ProductsScreen(initialCategory: 'Beverages'),
                           ),
                         );
                       },
@@ -118,14 +141,17 @@ class HomeNavbar extends StatelessWidget {
                     ),
                     _NavItem(
                       icon: Icons.notifications_none,
-                      title: 'Notifications (2)',
+                      title: _unreadCount > 0
+                          ? 'Notifications ($_unreadCount)'
+                          : 'Notifications',
+                      badge: _unreadCount,
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const NotificationsPage(),
                           ),
-                        );
+                        ).then((_) => _loadUnreadCount());
                       },
                     ),
                     _NavItem(
@@ -267,6 +293,7 @@ class _NavItem extends StatelessWidget {
   final bool active;
   final Color? color;
   final VoidCallback? onTap;
+  final int badge;
 
   const _NavItem({
     required this.icon,
@@ -274,6 +301,7 @@ class _NavItem extends StatelessWidget {
     this.active = false,
     this.color,
     this.onTap,
+    this.badge = 0,
   });
 
   static const kGreen = Color(0xFF1E6B4C);
@@ -285,7 +313,34 @@ class _NavItem extends StatelessWidget {
     return ListTile(
       dense: true,
       visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
-      leading: Icon(icon, color: c, size: 22),
+      leading: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(icon, color: c, size: 22),
+          if (badge > 0)
+            Positioned(
+              right: -6,
+              top: -4,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                child: Text(
+                  badge > 9 ? '9+' : badge.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
       horizontalTitleGap: 12,
       minLeadingWidth: 28,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12),

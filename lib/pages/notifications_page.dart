@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/notification_service.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -11,33 +12,99 @@ class _NotificationsPageState extends State<NotificationsPage> {
   static const kGreen = Color(0xFF1E6B4C);
   static const kGrey = Color(0xFF9FA5B0);
 
-  final List<_NotifItem> _items = [
-    _NotifItem(
-      title: 'Apply Success',
-      desc: 'You has apply an job in Queenify Group as UI Designer',
-      time: '10h ago',
-      unread: true,
-    ),
-    _NotifItem(
-      title: 'Interview Calls',
-      desc:
-          'Congratulations! You have interview calls tomorrow. Check schedule here..',
-      time: '4m ago',
-      unread: true,
-    ),
-    _NotifItem(
-      title: 'Apply Success',
-      desc: 'You has apply an job in Queenify Group as UI Designer',
-      time: '8h ago',
-      unread: false,
-    ),
-    _NotifItem(
-      title: 'Complete your profile',
-      desc: 'Please verify your profile information to continue using this app',
-      time: '4h ago',
-      unread: false,
-    ),
-  ];
+  final NotificationService _notificationService = NotificationService();
+  List<NotificationItem> _notifications = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final result = await _notificationService.getNotifications();
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        if (result['success'] == true) {
+          _notifications = result['data'] as List<NotificationItem>;
+        } else {
+          _error = result['message'];
+        }
+      });
+    }
+  }
+
+  Future<void> _markAsRead(int index) async {
+    final notification = _notifications[index];
+    if (notification.isRead) return;
+
+    final success = await _notificationService.markAsRead(notification.id);
+    if (success && mounted) {
+      setState(() {
+        _notifications[index] = NotificationItem(
+          id: notification.id,
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          data: notification.data,
+          isRead: true,
+          createdAt: notification.createdAt,
+        );
+      });
+    }
+  }
+
+  Future<void> _markAllAsRead() async {
+    final success = await _notificationService.markAllAsRead();
+    if (success && mounted) {
+      await _loadNotifications();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All notifications marked as read'),
+          backgroundColor: kGreen,
+        ),
+      );
+    }
+  }
+
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'order_paid':
+        return Icons.payment;
+      case 'order_update':
+        return Icons.local_shipping;
+      case 'reward':
+        return Icons.card_giftcard;
+      case 'promo':
+        return Icons.local_offer;
+      default:
+        return Icons.notifications;
+    }
+  }
+
+  Color _getColorForType(String type) {
+    switch (type) {
+      case 'order_paid':
+        return Colors.green;
+      case 'order_update':
+        return Colors.blue;
+      case 'reward':
+        return Colors.orange;
+      case 'promo':
+        return Colors.purple;
+      default:
+        return kGreen;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,22 +127,103 @@ class _NotificationsPageState extends State<NotificationsPage> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.black87),
-            onPressed: () {},
+            onSelected: (value) {
+              if (value == 'mark_all') {
+                _markAllAsRead();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'mark_all',
+                child: Row(
+                  children: [
+                    Icon(Icons.done_all, color: kGreen),
+                    SizedBox(width: 8),
+                    Text('Mark all as read'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
-      body: ListView.builder(
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: kGreen));
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              style: TextStyle(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadNotifications,
+              style: ElevatedButton.styleFrom(backgroundColor: kGreen),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_notifications.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_off_outlined,
+              size: 80,
+              color: Colors.grey[300],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No notifications yet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You will see notifications about orders,\npayments, and rewards here',
+              style: TextStyle(color: Colors.grey[500]),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadNotifications,
+      color: kGreen,
+      child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-        itemCount: _items.length,
+        itemCount: _notifications.length,
         itemBuilder: (context, i) {
-          final n = _items[i];
+          final n = _notifications[i];
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: n.isRead ? Colors.white : Colors.green.shade50,
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
@@ -91,23 +239,38 @@ class _NotificationsPageState extends State<NotificationsPage> {
               children: [
                 Row(
                   children: [
-                    if (n.unread) ...[
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _getColorForType(n.type).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        _getIconForType(n.type),
+                        color: _getColorForType(n.type),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    if (!n.isRead) ...[
                       Container(
-                        width: 12,
-                        height: 12,
+                        width: 10,
+                        height: 10,
                         decoration: const BoxDecoration(
                           color: kGreen,
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                     ],
                     Expanded(
                       child: Text(
                         n.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: n.isRead
+                              ? FontWeight.w600
+                              : FontWeight.w800,
                           color: Colors.black87,
                           letterSpacing: 0.2,
                         ),
@@ -116,85 +279,62 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  n.desc,
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 15,
-                    height: 1.55,
-                    fontWeight: FontWeight.w500,
+                Padding(
+                  padding: const EdgeInsets.only(left: 44),
+                  child: Text(
+                    n.message,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14,
+                      height: 1.55,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 16, color: kGrey),
-                    const SizedBox(width: 8),
-                    Text(
-                      n.time,
-                      style: const TextStyle(
-                        color: kGrey,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    InkWell(
-                      onTap: () {
-                        setState(() => _items[i] = n.copyWith(unread: false));
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
+                Padding(
+                  padding: const EdgeInsets.only(left: 44),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.access_time, size: 16, color: kGrey),
+                      const SizedBox(width: 8),
+                      Text(
+                        n.timeAgo,
+                        style: const TextStyle(
+                          color: kGrey,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
-                        child: Text(
-                          'Mark as read',
-                          style: TextStyle(
-                            color: kGreen,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
-                            letterSpacing: 0.2,
+                      ),
+                      const Spacer(),
+                      if (!n.isRead)
+                        InkWell(
+                          onTap: () => _markAsRead(i),
+                          borderRadius: BorderRadius.circular(8),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            child: Text(
+                              'Mark as read',
+                              style: TextStyle(
+                                color: kGreen,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           );
         },
       ),
-    );
-  }
-}
-
-class _NotifItem {
-  final String title;
-  final String desc;
-  final String time;
-  final bool unread;
-
-  const _NotifItem({
-    required this.title,
-    required this.desc,
-    required this.time,
-    required this.unread,
-  });
-
-  _NotifItem copyWith({
-    String? title,
-    String? desc,
-    String? time,
-    bool? unread,
-  }) {
-    return _NotifItem(
-      title: title ?? this.title,
-      desc: desc ?? this.desc,
-      time: time ?? this.time,
-      unread: unread ?? this.unread,
     );
   }
 }

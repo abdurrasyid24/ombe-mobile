@@ -1,38 +1,142 @@
 import 'package:flutter/material.dart';
-import '../models/order_model.dart';
+import '../services/user_service.dart';
+import '../services/auth_services.dart';
+import 'login_screen.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final UserService _userService = UserService();
+  final AuthService _authService = AuthService();
+
+  Map<String, dynamic>? _userData;
+  bool _isLoading = true;
+  bool _isEditing = false;
+  bool _isSaving = false;
+
+  late TextEditingController _fullNameController;
+  late TextEditingController _usernameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+  late TextEditingController _addressController;
 
   static const kGreen = Color(0xFF1E6B4C);
   static const kGrey = Color(0xFF9FA5B0);
 
-  List<_MostItem> _buildMostOrdered() {
-    final Map<String, int> count = {};
-    for (final o in dummyOrders) {
-      // Calculate total items from order
-      count[o.firstProductName] = (count[o.firstProductName] ?? 0) + o.totalItems;
-    }
-    final items =
-        count.entries.map((e) => _MostItem(name: e.key, qty: e.value)).toList()
-          ..sort((a, b) => b.qty.compareTo(a.qty));
-    return items.take(10).toList();
+  @override
+  void initState() {
+    super.initState();
+    _fullNameController = TextEditingController();
+    _usernameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+    _addressController = TextEditingController();
+    _loadProfile();
   }
 
-  String _img(String name) {
-    final n = name.toLowerCase();
-    if (n.contains('lemon')) return 'assets/images/featured_1.jpg';
-    if (n.contains('mocha')) return 'assets/images/featured_2.jpg';
-    if (n.contains('latte')) return 'assets/images/cup_3.png';
-    if (n.contains('cappu')) return 'assets/images/cup_2.png';
-    if (n.contains('espresso')) return 'assets/images/cup_1.png';
-    return 'assets/images/cup_1.png';
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() => _isLoading = true);
+    final result = await _userService.getProfile();
+    if (result['success'] == true) {
+      setState(() {
+        _userData = result['data'];
+        _fullNameController.text = _userData?['fullName'] ?? '';
+        _usernameController.text = _userData?['username'] ?? '';
+        _emailController.text = _userData?['email'] ?? '';
+        _phoneController.text = _userData?['phone'] ?? '';
+        _addressController.text = _userData?['address'] ?? '';
+        _isLoading = false;
+      });
+    } else {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to load profile'),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    setState(() => _isSaving = true);
+
+    final result = await _userService.updateProfile(
+      fullName: _fullNameController.text.trim(),
+      username: _usernameController.text.trim(),
+      phone: _phoneController.text.trim(),
+      address: _addressController.text.trim(),
+    );
+
+    setState(() => _isSaving = false);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Profile updated'),
+          backgroundColor: result['success'] == true
+              ? Colors.green
+              : Colors.red,
+        ),
+      );
+      if (result['success'] == true) {
+        setState(() {
+          _isEditing = false;
+        });
+        _loadProfile();
+      }
+    }
+  }
+
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _authService.logout();
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final most = _buildMostOrdered();
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -52,138 +156,178 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
         actions: [
+          if (!_isEditing)
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.black87),
+              onPressed: () => setState(() => _isEditing = true),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.black87),
+              onPressed: () {
+                setState(() {
+                  _isEditing = false;
+                  _fullNameController.text = _userData?['fullName'] ?? '';
+                  _usernameController.text = _userData?['username'] ?? '';
+                  _phoneController.text = _userData?['phone'] ?? '';
+                  _addressController.text = _userData?['address'] ?? '';
+                });
+              },
+            ),
           IconButton(
-            icon: const Icon(Icons.edit, color: Colors.black87),
-            onPressed: () {},
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: _logout,
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 28),
-        children: [
-          Center(
-            child: Column(
-              children: const [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: AssetImage(
-                    'assets/images/profile_avatar.jpg',
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _userData == null
+          ? const Center(child: Text('Failed to load profile'))
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 28),
+              children: [
+                Center(
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: _userData?['profileImage'] != null
+                        ? NetworkImage(_userData!['profileImage'])
+                              as ImageProvider
+                        : const AssetImage('assets/images/profile_avatar.jpg'),
                   ),
                 ),
-                SizedBox(height: 18),
-                Text(
-                  'William Smith',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'London, England',
-                  style: TextStyle(
-                    color: kGreen,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 30),
-          _ContactTile(
-            icon: Icons.call,
-            title: 'Mobile Phone',
-            value: '+12 345 678 92',
-          ),
-          const SizedBox(height: 20),
-          _ContactTile(
-            icon: Icons.email_outlined,
-            title: 'Email Address',
-            value: 'example@gmail.com',
-          ),
-          const SizedBox(height: 20),
-          _ContactTile(
-            icon: Icons.location_on_outlined,
-            title: 'Address',
-            value: 'Franklin Avenue, Corner St.\nLondon, 24125151',
-          ),
-          const SizedBox(height: 32),
-          const Text(
-            'Most Ordered',
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            height: 156,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: most.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 16),
-              itemBuilder: (context, i) {
-                final m = most[i];
-                return Container(
-                  width: 300,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: kGreen,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 92,
-                        height: 92,
-                        child: Image.asset(_img(m.name), fit: BoxFit.contain),
+                const SizedBox(height: 18),
+                if (!_isEditing) ...[
+                  Center(
+                    child: Text(
+                      _userData?['fullName'] ??
+                          _userData?['username'] ??
+                          'User',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black87,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              m.name,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Text(
-                                  'Beverages',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Icon(
-                                  Icons.open_in_new,
-                                  size: 16,
-                                  color: Colors.white70,
-                                ),
-                              ],
-                            ),
-                          ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Center(
+                    child: Text(
+                      _userData?['email'] ?? '',
+                      style: const TextStyle(
+                        color: kGreen,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  _ContactTile(
+                    icon: Icons.person_outline,
+                    title: 'Username',
+                    value: _userData?['username'] ?? 'N/A',
+                  ),
+                  const SizedBox(height: 20),
+                  _ContactTile(
+                    icon: Icons.call,
+                    title: 'Mobile Phone',
+                    value: _userData?['phone'] ?? 'Not set',
+                  ),
+                  const SizedBox(height: 20),
+                  _ContactTile(
+                    icon: Icons.email_outlined,
+                    title: 'Email Address',
+                    value: _userData?['email'] ?? 'N/A',
+                  ),
+                  const SizedBox(height: 20),
+                  _ContactTile(
+                    icon: Icons.location_on_outlined,
+                    title: 'Address',
+                    value: _userData?['address'] ?? 'Not set',
+                  ),
+                ] else ...[
+                  const SizedBox(height: 20),
+                  _buildTextField(
+                    'Full Name',
+                    _fullNameController,
+                    Icons.person,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    'Username',
+                    _usernameController,
+                    Icons.alternate_email,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    'Phone',
+                    _phoneController,
+                    Icons.phone,
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    'Address',
+                    _addressController,
+                    Icons.location_on,
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kGreen,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                    ],
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Save Changes',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
                   ),
-                );
-              },
+                ],
+              ],
             ),
-          ),
-        ],
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    TextInputType? keyboardType,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: kGreen),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kGreen, width: 2),
+        ),
       ),
     );
   }
@@ -252,10 +396,4 @@ class _ContactTile extends StatelessWidget {
       ],
     );
   }
-}
-
-class _MostItem {
-  final String name;
-  final int qty;
-  const _MostItem({required this.name, required this.qty});
 }

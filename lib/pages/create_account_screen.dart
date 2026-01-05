@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/auth_services.dart';
-import 'home_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -43,7 +42,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
     if (username.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Username, email, dan password wajib diisi')),
+        const SnackBar(
+          content: Text('Username, email, dan password wajib diisi'),
+        ),
       );
       return;
     }
@@ -70,23 +71,23 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
       if (res['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registrasi berhasil!')),
+          const SnackBar(
+            content: Text('Registrasi berhasil! Silakan login.'),
+            backgroundColor: Colors.green,
+          ),
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
+        Navigator.pop(context);
       } else {
         final msg = res['message']?.toString() ?? 'Registrasi gagal';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registrasi gagal: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Registrasi gagal: $e')));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -246,8 +247,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _createAccount,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isLoading 
-                              ? const Color(0xFFBDBDBD) 
+                          backgroundColor: _isLoading
+                              ? const Color(0xFFBDBDBD)
                               : _green,
                           elevation: 0,
                           shape: RoundedRectangleBorder(

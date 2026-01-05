@@ -13,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   int _page = 0;
 
-  final _emailC = TextEditingController(text: 'admin@ombe.com');
+  final _emailC = TextEditingController();
   final _passC = TextEditingController();
 
   static const _green = Color(0xFF007344);
@@ -46,10 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final res = await _authService.login(
-        email: email,
-        password: password,
-      );
+      final res = await _authService.login(email: email, password: password);
 
       if (!mounted) return;
 
@@ -60,15 +57,15 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         final msg = res['message']?.toString() ?? 'Login gagal';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login gagal: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login gagal: $e')));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -89,8 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
               child: _page == 0
                   ? _buildChoose()
                   : _page == 1
-                      ? _buildSignIn()
-                      : _buildForgot(),
+                  ? _buildSignIn()
+                  : _buildForgot(),
             ),
           ),
         ),
@@ -202,8 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   contentPadding: EdgeInsets.symmetric(vertical: 8),
                 ),
-                style:
-                    const TextStyle(fontSize: 16, color: Color(0xFF121212)),
+                style: const TextStyle(fontSize: 16, color: Color(0xFF121212)),
               ),
               const SizedBox(height: 28),
               const Text(
@@ -237,8 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     size: 22,
                   ),
                 ),
-                style:
-                    const TextStyle(fontSize: 16, color: Color(0xFF121212)),
+                style: const TextStyle(fontSize: 16, color: Color(0xFF121212)),
               ),
               const SizedBox(height: 40),
               SizedBox(
@@ -401,8 +396,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     size: 22,
                   ),
                 ),
-                style:
-                    const TextStyle(fontSize: 16, color: Color(0xFF121212)),
+                style: const TextStyle(fontSize: 16, color: Color(0xFF121212)),
               ),
               const SizedBox(height: 40),
               SizedBox(
