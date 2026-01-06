@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/product_model.dart';
 import '../services/cart_service.dart';
 import 'checkout/shipping_address_page.dart';
+import 'cart_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -365,7 +366,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     label: 'VIEW CART',
                                     textColor: Colors.white,
                                     onPressed: () {
-                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                      if (context.mounted) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const CartPage(),
+                                          ),
+                                        );
+                                      }
                                     },
                                   ),
                                 ),

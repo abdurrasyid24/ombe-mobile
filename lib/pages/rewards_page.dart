@@ -30,7 +30,7 @@ class _RewardsPageState extends State<RewardsPage> {
     final result = await _rewardService.getRewards();
     if (result['success'] == true && mounted) {
       setState(() {
-        _totalPoints = result['data']['totalPoints'] ?? 0;
+        _totalPoints = int.tryParse(result['data']['totalPoints']?.toString() ?? '0') ?? 0;
         _history = List<Map<String, dynamic>>.from(
           result['data']['history'] ?? [],
         );
@@ -277,8 +277,8 @@ class _RewardsPageState extends State<RewardsPage> {
       ),
       itemBuilder: (context, index) {
         final r = _history[index];
-        final points = r['points'] as int;
-        final type = r['type'] as String;
+        final points = int.tryParse(r['points']?.toString() ?? '0') ?? 0;
+        final type = r['type']?.toString() ?? '';
         final isEarned = type == 'earned';
 
         return Padding(

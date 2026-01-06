@@ -104,10 +104,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             icon: const Icon(Icons.refresh, color: Colors.black87),
             onPressed: _loadOrders,
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black87),
-            onPressed: _openLeftSidePopupMenu,
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.more_vert, color: Colors.black87),
+          //   onPressed: _openLeftSidePopupMenu,
+          // ),
         ],
       ),
       body: _isLoading
@@ -307,179 +307,179 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     );
   }
 
-  void _openLeftSidePopupMenu() {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'Menu',
-      barrierColor: Colors.black54,
-      pageBuilder: (context, anim1, anim2) {
-        return SafeArea(
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.75,
-              height: MediaQuery.of(context).size.height,
-              child: Material(
-                color: Colors.white,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header: Logo Ombe + tombol close
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: const [
-                              Icon(Icons.local_cafe, color: kGreen, size: 28),
-                              SizedBox(width: 8),
-                              Text(
-                                'Ombe',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 22,
-                                  color: kGreen,
-                                ),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.black87,
-                            ),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ],
-                      ),
-                    ),
+  // void _openLeftSidePopupMenu() {
+  //   showGeneralDialog(
+  //     context: context,
+  //     barrierDismissible: true,
+  //     barrierLabel: 'Menu',
+  //     barrierColor: Colors.black54,
+  //     pageBuilder: (context, anim1, anim2) {
+  //       return SafeArea(
+  //         child: Align(
+  //           alignment: Alignment.centerLeft,
+  //           child: SizedBox(
+  //             width: MediaQuery.of(context).size.width * 0.75,
+  //             height: MediaQuery.of(context).size.height,
+  //             child: Material(
+  //               color: Colors.white,
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   // Header: Logo Ombe + tombol close
+  //                   Padding(
+  //                     padding: const EdgeInsets.symmetric(
+  //                       horizontal: 20,
+  //                       vertical: 16,
+  //                     ),
+  //                     child: Row(
+  //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                       children: [
+  //                         Row(
+  //                           children: const [
+  //                             Icon(Icons.local_cafe, color: kGreen, size: 28),
+  //                             SizedBox(width: 8),
+  //                             Text(
+  //                               'Ombe',
+  //                               style: TextStyle(
+  //                                 fontWeight: FontWeight.w900,
+  //                                 fontSize: 22,
+  //                                 color: kGreen,
+  //                               ),
+  //                             ),
+  //                           ],
+  //                         ),
+  //                         IconButton(
+  //                           icon: const Icon(
+  //                             Icons.close,
+  //                             color: Colors.black87,
+  //                           ),
+  //                           onPressed: () => Navigator.of(context).pop(),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
 
-                    const Divider(height: 1, thickness: 1),
+  //                   const Divider(height: 1, thickness: 1),
 
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        children: [
-                          _buildMenuItem(
-                            icon: Icons.home_outlined,
-                            label: 'Home',
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.shopping_bag_outlined,
-                            label: 'My Order',
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.menu_book_outlined,
-                            label: 'Blog',
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.article_outlined,
-                            label: 'Blog Detail',
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.favorite_border,
-                            label: 'Wishlist',
-                            isDisabled: true,
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.notifications_none,
-                            label: 'Notifications (2)',
-                            isDisabled: true,
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.store_mall_directory_outlined,
-                            label: 'Store Locations',
-                            isDisabled: true,
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.local_shipping_outlined,
-                            label: 'Delivery Tracking',
-                            isDisabled: true,
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.card_giftcard_outlined,
-                            label: 'Rewards',
-                            isDisabled: true,
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.person_outline,
-                            label: 'Profile',
-                            isDisabled: true,
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.star_border,
-                            label: 'Order Review',
-                            isDisabled: true,
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.message_outlined,
-                            label: 'Message',
-                            isDisabled: true,
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.grid_view_outlined,
-                            label: 'Elements',
-                            isDisabled: true,
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.settings_outlined,
-                            label: 'Setting',
-                            isDisabled: true,
-                          ),
+  //                   Expanded(
+  //                     child: ListView(
+  //                       padding: const EdgeInsets.symmetric(vertical: 12),
+  //                       children: [
+  //                         _buildMenuItem(
+  //                           icon: Icons.home_outlined,
+  //                           label: 'Home',
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.shopping_bag_outlined,
+  //                           label: 'My Order',
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.menu_book_outlined,
+  //                           label: 'Blog',
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.article_outlined,
+  //                           label: 'Blog Detail',
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.favorite_border,
+  //                           label: 'Wishlist',
+  //                           isDisabled: true,
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.notifications_none,
+  //                           label: 'Notifications (2)',
+  //                           isDisabled: true,
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.store_mall_directory_outlined,
+  //                           label: 'Store Locations',
+  //                           isDisabled: true,
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.local_shipping_outlined,
+  //                           label: 'Delivery Tracking',
+  //                           isDisabled: true,
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.card_giftcard_outlined,
+  //                           label: 'Rewards',
+  //                           isDisabled: true,
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.person_outline,
+  //                           label: 'Profile',
+  //                           isDisabled: true,
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.star_border,
+  //                           label: 'Order Review',
+  //                           isDisabled: true,
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.message_outlined,
+  //                           label: 'Message',
+  //                           isDisabled: true,
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.grid_view_outlined,
+  //                           label: 'Elements',
+  //                           isDisabled: true,
+  //                         ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.settings_outlined,
+  //                           label: 'Setting',
+  //                           isDisabled: true,
+  //                         ),
 
-                          const Divider(),
+  //                         const Divider(),
 
-                          _buildMenuItem(
-                            icon: Icons.power_settings_new,
-                            label: 'Logout',
-                            iconColor: Colors.red,
-                            textColor: Colors.red,
-                            onTap: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
+  //                         _buildMenuItem(
+  //                           icon: Icons.power_settings_new,
+  //                           label: 'Logout',
+  //                           iconColor: Colors.red,
+  //                           textColor: Colors.red,
+  //                           onTap: () {
+  //                             Navigator.of(context).pop();
+  //                           },
+  //                         ),
 
-                          const SizedBox(height: 24),
+  //                         const SizedBox(height: 24),
 
-                          // Footer app info
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Text(
-                              'Ombe Coffee App\nApp version 1.2',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(-1, 0),
-            end: Offset.zero,
-          ).animate(anim1),
-          child: child,
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 300),
-    );
-  }
+  //                         // Footer app info
+  //                         const Padding(
+  //                           padding: EdgeInsets.symmetric(horizontal: 20),
+  //                           child: Text(
+  //                             'Ombe Coffee App\nApp version 1.2',
+  //                             style: TextStyle(
+  //                               fontSize: 12,
+  //                               color: Colors.black54,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                         const SizedBox(height: 20),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //     transitionBuilder: (context, anim1, anim2, child) {
+  //       return SlideTransition(
+  //         position: Tween<Offset>(
+  //           begin: const Offset(-1, 0),
+  //           end: Offset.zero,
+  //         ).animate(anim1),
+  //         child: child,
+  //       );
+  //     },
+  //     transitionDuration: const Duration(milliseconds: 300),
+  //   );
+  // }
 
   Widget _buildMenuItem({
     required IconData icon,

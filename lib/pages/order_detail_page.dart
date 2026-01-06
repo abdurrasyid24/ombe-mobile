@@ -149,12 +149,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Icon(Icons.location_on_outlined, color: kGreen, size: 24),
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Jl. Kenangan No. 21, Sleman, Yogyakarta\n(Estimated delivery: 1-2 days)',
+                      '${_currentOrder.deliveryAddress?['fullAddress'] ?? 'No address provided'}\n(Estimated delivery: 1-2 days)',
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.black87,

@@ -94,9 +94,11 @@ class Order {
       totalAmount: double.parse(json['totalAmount'].toString()),
       status: json['status'] ?? 'pending',
       paymentMethod: json['paymentMethod'] ?? '',
-      deliveryAddress: json['deliveryAddress'] != null
-          ? Map<String, dynamic>.from(json['deliveryAddress'])
-          : null,
+      deliveryAddress: json['deliveryAddress'] is String
+          ? {'fullAddress': json['deliveryAddress']}
+          : json['deliveryAddress'] != null
+              ? Map<String, dynamic>.from(json['deliveryAddress'])
+              : null,
       notes: json['notes'],
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),

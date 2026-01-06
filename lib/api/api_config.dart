@@ -3,7 +3,8 @@ class ApiConfig {
   // Untuk emulator Android: http://10.0.2.2:5000
   // Untuk device fisik: http://[IP_LAPTOP]:5000 (contoh: http://192.168.1.10:5000)
   // Untuk iOS simulator: http://localhost:5000
-  static const String baseUrl = 'http://10.0.2.2:5000';
+  // static const String baseUrl = 'http://10.0.2.2:5000';
+  static const String baseUrl = 'https://server-ombe.codingankuu.com';
 
   // Auth endpoints
   static const String login = '/api/auth/login';
